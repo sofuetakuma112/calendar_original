@@ -33,9 +33,12 @@ const store = new Vuex.Store({
         name: payload.message,
         date: payload.date
       })
-      console.log(state.tasks)
 
       state.nextTaskId++
+    },
+    editTask(state, payload) {
+      const task = state.tasks.find(task => task.id === payload.taskId)
+      task.name = payload.editMessage
     }
   }
 })

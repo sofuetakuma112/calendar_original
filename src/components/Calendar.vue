@@ -25,30 +25,46 @@
             :class="{disabled: day.isDisabled, today: day.isToday}"
             @click="openModal(day.fullDate)"
           >
-          {{day.date}}
-          <!-- <br><span @click.stop="">{{getMessageText(day.fullDate)}}</span> -->
-          <br>
-          <span v-for="task in taskList" :key="task.id">{{task.date == day.fullDate ? task.name : ''}}</span>
+            {{day.date}}
+            <br />
+            <span
+              v-for="task in taskList"
+              :key="task.id"
+              @click.stop="openEditModal(task.id)"
+            >{{task.date == day.fullDate ? task.name : ''}}</span>
           </td>
         </tr>
       </tbody>
     </table>
+    <!-- 新規追加用モーダル -->
     <my-modal @close="closeModal" v-if="modal">
       <p>タスクを入力してください</p>
-      <div><input type="text" v-model="message"></div>
+      <div>
+        <input type="text" v-model="message" />
+      </div>
       <template slot="footer">
         <button @click="doSend">送信</button>
+      </template>
+    </my-modal>
+    <!-- 編集用モーダル -->
+    <my-modal @close="closeModal" v-if="editModal">
+      <p>タスクを入力してください</p>
+      <div>
+        <input type="text" v-model="editMessage" />
+      </div>
+      <template slot="footer">
+        <button @click="doEdit()">送信</button>
       </template>
     </my-modal>
   </div>
 </template>
 
 <script>
-import MyModal from './MyModal.vue'
+import MyModal from "./MyModal.vue";
 
 export default {
   components: {
-    MyModal
+    MyModal,
   },
   data() {
     return {
@@ -56,8 +72,11 @@ export default {
       year: "",
       today: "",
       modal: false,
-      message: '',
-      fullDate: ''
+      editModal: false,
+      message: "",
+      editMessage: "",
+      fullDate: "",
+      taskId: null
     };
   },
   created() {
@@ -99,7 +118,10 @@ export default {
           date: d - i,
           isToday: false,
           isDisabled: true,
-          fullDate: `${this.year}_${String(this.month).padStart(2, '0')}_${String(d - i).padStart(2, '0')}`,
+          fullDate: `${this.year}_${String(this.month).padStart(
+            2,
+            "0"
+          )}_${String(d - i).padStart(2, "0")}`,
         });
       }
 
@@ -115,7 +137,10 @@ export default {
           date: i,
           isToday: false,
           isDisabled: false,
-          fullDate: `${this.year}_${String(this.month + 1).padStart(2, '0')}_${String(i).padStart(2, '0')}`,
+          fullDate: `${this.year}_${String(this.month + 1).padStart(
+            2,
+            "0"
+          )}_${String(i).padStart(2, "0")}`,
         });
       }
       // 年月がthis.todayと一致するとき実行
@@ -139,17 +164,22 @@ export default {
           date: i,
           isToday: false,
           isDisabled: true,
-          fullDate: `${this.year}_${String(this.month + 2).padStart(2, '0')}_${String(i).padStart(2, '0')}`,
+          fullDate: `${this.year}_${String(this.month + 2).padStart(
+            2,
+            "0"
+          )}_${String(i).padStart(2, "0")}`,
         });
       }
 
       return dates;
     },
-
     taskList() {
-      console.log('GET!')
-      return this.$store.getters.taskList
+      return this.$store.getters.taskList;
     },
+    getTaskMessage() {
+      const editTask = this.taskList.filter(task => task.id === this.taskId)[0]
+      return editTask
+    }
   },
   methods: {
     prevPage() {
@@ -167,25 +197,41 @@ export default {
       }
     },
     openModal(value) {
-      this.modal = true
-      this.fullDate = value
+      this.modal = true;
+      // doSendでmutationに渡すのに使う
+      this.fullDate = value;
+    },
+    openEditModal(taskId) {
+      this.editModal = true;
+      this.taskId = taskId;
+      this.editMessage = this.getTaskMessage.name
     },
     closeModal() {
-      this.modal = false
+      this.modal = false;
+      this.editModal = false;
     },
     doSend() {
-      if(this.message.length > 0) {
-        this.$store.commit('addTask', {message: this.message, date: this.fullDate})
-        this.message = ''
-        this.closeModal()
+      if (this.message.length > 0) {
+        this.$store.commit("addTask", {
+          message: this.message,
+          date: this.fullDate,
+        });
+        this.message = "";
+        this.closeModal();
       } else {
-        alert('タスクを入力してください')
+        alert("タスクを入力してください");
       }
     },
-    getMessageText(calendarDate) {
-      for (let i = 0; i < this.tasks.length; i++) {
-        const message = this.tasks.filter(date => date.date === calendarDate)[0]
-        return message ? message.name : ''
+    doEdit() {
+      if (this.editMessage.length > 0) {
+        this.$store.commit("editTask", {
+          editMessage: this.editMessage,
+          taskId: this.taskId,
+        });
+        this.editMessage = "";
+        this.closeModal();
+      } else {
+        alert("タスクを入力してください");
       }
     }
   },
