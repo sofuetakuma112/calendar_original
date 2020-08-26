@@ -1,24 +1,11 @@
 # todoapp
 
-## Project setup
-```
-npm install
-```
+概要
+Googleカレンダーのようなアプリです
+後にWeb APIと連携してカレンダーにイベント情報等を反映出来るようにするつもりです
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+2020 / 08 / 25
+タスク追加機能のみ行うことが出来ます
 
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+2020 / 08 / 26
+既存の追加済みタスクが編集できるようになりました
