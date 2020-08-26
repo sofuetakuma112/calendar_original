@@ -48,6 +48,7 @@
     </my-modal>
     <!-- 編集用モーダル -->
     <my-modal @close="closeModal" v-if="editModal">
+      <button @click="deleteTask(taskId)">削除</button>
       <p>タスクを入力してください</p>
       <div>
         <input type="text" v-model="editMessage" />
@@ -204,6 +205,7 @@ export default {
     openEditModal(taskId) {
       this.editModal = true;
       this.taskId = taskId;
+      console.log(this.taskId)
       this.editMessage = this.getTaskMessage.name
     },
     closeModal() {
@@ -233,6 +235,13 @@ export default {
       } else {
         alert("タスクを入力してください");
       }
+    },
+    deleteTask(id) {
+      if (!confirm('このタスクを削除しますか？')) {
+        return
+      }
+      this.$store.commit('deleteTask', {id})
+      this.editModal = false;
     }
   },
 };

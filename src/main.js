@@ -39,6 +39,10 @@ const store = new Vuex.Store({
     editTask(state, payload) {
       const task = state.tasks.find(task => task.id === payload.taskId)
       task.name = payload.editMessage
+    },
+    deleteTask(state, payload) {
+      const task = state.tasks.filter(task => task.id !== payload.id)
+      state.tasks = task
     }
   }
 })
