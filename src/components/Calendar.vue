@@ -27,11 +27,11 @@
           >
             {{day.date}}
             <br />
-            <span
-              v-for="task in taskList"
-              :key="task.id"
-              @click.stop="openEditModal(task.id)"
-            >{{task.date == day.fullDate ? task.name : ''}}</span>
+            <template v-for="task in taskList">
+              <div class="taskList" :key="task.date">
+                <span v-if="task.date === day.fullDate" :key="task.id" @click.stop="openEditModal(task.id)">{{task.name}}</span>
+              </div>
+            </template>
           </td>
         </tr>
       </tbody>
@@ -77,7 +77,8 @@ export default {
       message: "",
       editMessage: "",
       fullDate: "",
-      taskId: null
+      taskId: null,
+      invisible: null
     };
   },
   created() {
@@ -174,9 +175,11 @@ export default {
 
       return dates;
     },
+    
     taskList() {
       return this.$store.getters.taskList;
     },
+
     getTaskMessage() {
       const editTask = this.taskList.filter(task => task.id === this.taskId)[0]
       return editTask
@@ -247,7 +250,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .calendar-wrapper {
   height: 100vh;
 }
@@ -274,6 +277,21 @@ td {
 
 td {
   vertical-align: top;
+  overflow-y: scroll;
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  span {
+    background-color: rgb(199, 36, 58);
+    color: white;
+    padding: 5px;
+    margin-bottom: 10px;
+  }
+  span.visible {
+    display: none;
+  }
 }
 
 tbody td:first-child {
