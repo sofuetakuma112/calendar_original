@@ -27,11 +27,15 @@
           >
             {{day.date}}
             <br />
-            <template v-for="task in taskList">
-              <div class="taskList" :key="task.date">
-                <span v-if="task.date === day.fullDate" :key="task.id" @click.stop="openEditModal(task.id)">{{task.name}}</span>
-              </div>
-            </template>
+            <div class="taskList">
+              <template v-for="task in taskList">
+                <span
+                  v-if="task.date === day.fullDate"
+                  :key="task.id"
+                  @click.stop="openEditModal(task.id)"
+                >{{task.name}}</span>
+              </template>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -48,7 +52,7 @@
     </my-modal>
     <!-- 編集用モーダル -->
     <my-modal @close="closeModal" v-if="editModal">
-      <button @click="deleteTask(taskId)">削除</button>
+      <button @click="deleteTask()">削除</button>
       <p>タスクを入力してください</p>
       <div>
         <input type="text" v-model="editMessage" />
@@ -61,6 +65,8 @@
 </template>
 
 <script>
+import firebase from "firebase";
+import "firebase/firestore";
 import MyModal from "./MyModal.vue";
 
 export default {
@@ -69,16 +75,16 @@ export default {
   },
   data() {
     return {
-      month: "",
-      year: "",
-      today: "",
-      modal: false,
-      editModal: false,
-      message: "",
-      editMessage: "",
-      fullDate: "",
-      taskId: null,
-      invisible: null
+      month: "", // new Dateから作成した現在の月
+      year: "", // new Dateから作成した現在の年
+      today: "", // new Date用
+      modal: false, // 新規追加用モーダル表示
+      editModal: false, // 更新用モーダル表示
+      message: "", // タスク内容をv-modelで一時的に保存
+      editMessage: "", // 編集するタスク内容をv-modelで一時的に保存
+      fullDate: "", // 年月日
+      taskId: null, // タスクを特定するid
+      db: null
     };
   },
   created() {
@@ -87,6 +93,27 @@ export default {
     this.year = this.today.getFullYear();
     // 0 ~ 11
     this.month = this.today.getMonth();
+
+    this.db = firebase.firestore();
+
+    var that = this;
+    this.db
+      .collection("tasks")
+      .get()
+      .then((snapshot) => {
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          that.message = data.message;
+          that.fullDate = data.date;
+          that.taskId = data.id;
+          that.$store.commit("addTask", {
+            message: that.message,
+            date: that.fullDate,
+            id: that.taskId,
+          });
+          console.log();
+        });
+      });
   },
   computed: {
     createCalendar() {
@@ -175,15 +202,17 @@ export default {
 
       return dates;
     },
-    
+
     taskList() {
       return this.$store.getters.taskList;
     },
 
     getTaskMessage() {
-      const editTask = this.taskList.filter(task => task.id === this.taskId)[0]
-      return editTask
-    }
+      const editTask = this.taskList.filter(
+        (task) => task.id === this.taskId
+      )[0];
+      return editTask;
+    },
   },
   methods: {
     prevPage() {
@@ -201,6 +230,7 @@ export default {
       }
     },
     openModal(value) {
+      this.message = "";
       this.modal = true;
       // doSendでmutationに渡すのに使う
       this.fullDate = value;
@@ -208,18 +238,34 @@ export default {
     openEditModal(taskId) {
       this.editModal = true;
       this.taskId = taskId;
-      console.log(this.taskId)
-      this.editMessage = this.getTaskMessage.name
+      this.editMessage = this.getTaskMessage.name;
     },
     closeModal() {
       this.modal = false;
       this.editModal = false;
+      this.message = "";
     },
     doSend() {
       if (this.message.length > 0) {
+        const that = this;
+        const doc = this.db.collection("tasks").doc();
+        doc
+          .set({
+            message: that.message,
+            date: that.fullDate,
+            id: doc.id,
+          })
+          .then(function () {
+            console.log("Done!");
+          })
+          .catch(function () {
+            console.log("Error!");
+          });
+
         this.$store.commit("addTask", {
           message: this.message,
           date: this.fullDate,
+          id: doc.id,
         });
         this.message = "";
         this.closeModal();
@@ -229,6 +275,10 @@ export default {
     },
     doEdit() {
       if (this.editMessage.length > 0) {
+        const that = this;
+        this.db.collection("tasks").doc(this.taskId).update({
+          message: that.editMessage,
+        });
         this.$store.commit("editTask", {
           editMessage: this.editMessage,
           taskId: this.taskId,
@@ -239,13 +289,20 @@ export default {
         alert("タスクを入力してください");
       }
     },
-    deleteTask(id) {
-      if (!confirm('このタスクを削除しますか？')) {
-        return
+    deleteTask() {
+      if (!confirm("このタスクを削除しますか？")) {
+        return;
       }
-      this.$store.commit('deleteTask', {id})
+      this.db
+        .collection('tasks')
+        .doc(this.taskId)
+        .delete()
+        .then(() => {
+          console.log("delete!");
+        });
+      this.$store.commit("deleteTask", { id: this.taskId });
       this.editModal = false;
-    }
+    },
   },
 };
 </script>
@@ -271,7 +328,7 @@ th,
 td {
   padding: 8px;
   text-align: center;
-  height: 50px;
+  // height: 50px;
   border: 1px solid #eeeeee;
 }
 
