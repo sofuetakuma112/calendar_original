@@ -1,22 +1,22 @@
 <template>
   <div class="calendar-wrapper example-modal-window">
-    <header class="header">
-      <h1>カレンダー</h1>
-      <div v-if="user.uid" key="login">
-        ようこそ{{user.displayName}}様
-        <button type="button" @click="doLogout">ログアウト</button>
-      </div>
-      <div v-else key="logout">
-        <button type="button" @click="doLogin">ログイン</button>
-      </div>
-    </header><br>
-
     <table>
       <thead>
         <tr>
           <th id="prev" @click="prevPage">&laquo;</th>
-          <th id="title" colspan="5">{{getTitleDate}}</th>
+          <th id="title" colspan="3">{{getTitleDate}}</th>
           <th id="next" @click="nextPage">&raquo;</th>
+          <th v-if="user.uid" key="login" colspan="2">
+            <div>
+              ようこそ{{user.displayName}}様
+              <button type="button" @click="doLogout">ログアウト</button>
+            </div>
+          </th>
+          <th v-else key="logout" colspan="2">
+            <div>
+              <button type="button" @click="doLogin">ログイン</button>
+            </div>
+          </th>
         </tr>
         <tr>
           <th>Sun</th>
@@ -356,11 +356,14 @@ td {
   text-align: center;
   // height: 50px;
   border: 1px solid #eeeeee;
+  user-select: none;
+  -moz-user-select: none;
 }
 
 td {
   vertical-align: top;
   overflow-y: scroll;
+  cursor: pointer;
 }
 
 .taskList {

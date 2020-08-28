@@ -1,27 +1,24 @@
 # todoapp
 
-[概要]
+## Project setup
+```
+npm install
+```
 
-Googleカレンダーのようなアプリです
+### Compiles and hot-reloads for development
+```
+npm run serve
+```
 
-後にWeb APIと連携してカレンダーにイベント情報等を反映出来るようにするつもりです
+### Compiles and minifies for production
+```
+npm run build
+```
 
-2020 / 08 / 25
+### Lints and fixes files
+```
+npm run lint
+```
 
-タスクの新規追加のみ行うことが出来ます
-
-2020 / 08 / 26
-
-既存の追加済みタスクが編集、削除ができるようになりました
-
-2020 / 08 / 27
-
-追加済みタスクを表示する際、タスクがない日付にも空タグが追加される現象を修正しました
-
-2020 / 08 / 28
-
-firebaseのデータベース機能を用いて永続化対応しました
-
-Googleアカウントでログイン認証出来るようになりました
-
-更に、他人のタスクは見れないようにしました
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).
