@@ -34,6 +34,10 @@
     background: #ffffff;
     border-radius: 4px;
     overflow: hidden;
+    margin: 0 20%;
+    width: 100%;
+    max-width: 450px;
+    padding-top: 25px;
   }
 
   &-content {
@@ -44,6 +48,7 @@
     background: #ccc;
     padding: 10px;
     text-align: right;
+    margin-top: 25px;
   }
 }
 

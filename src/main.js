@@ -7,11 +7,15 @@ Vue.use(Vuex)
 
 const store = new Vuex.Store({
   state: {
-    tasks: []
+    tasks: [],
+    user: {}
   },
   getters: {
     taskList: state => {
       return state.tasks
+    },
+    getUser: state => {
+      return state.user
     }
   },
   mutations: {
@@ -32,6 +36,9 @@ const store = new Vuex.Store({
     deleteTask(state, payload) {
       const task = state.tasks.filter(task => task.id !== payload.id)
       state.tasks = task
+    },
+    setUser(state, payload) {
+      state.user = payload.user
     }
   }
 })
@@ -48,6 +55,14 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faAngleLeft, faAngleRight, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
+library.add(faAngleLeft, faAngleRight, faTrash)
+
+Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 Vue.config.productionTip = false
 

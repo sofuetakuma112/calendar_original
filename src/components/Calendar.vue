@@ -3,18 +3,26 @@
     <table>
       <thead>
         <tr>
-          <th id="prev" @click="prevPage">&laquo;</th>
+          <th id="prev" @click="prevPage">
+            <font-awesome-icon icon="angle-left" class="icon" />
+          </th>
           <th id="title" colspan="3">{{getTitleDate}}</th>
-          <th id="next" @click="nextPage">&raquo;</th>
-          <th v-if="user.uid" key="login" colspan="2">
+          <th id="next" @click="nextPage">
+            <font-awesome-icon icon="angle-right" class="icon" />
+          </th>
+          <th v-if="getUser.uid" key="login" colspan="2">
             <div>
-              ようこそ{{user.displayName}}様
-              <button type="button" @click="doLogout">ログアウト</button>
+              ようこそ{{getUser.displayName}}様
+              <button
+                type="button"
+                @click="$emit('logout')"
+                class="logout button"
+              >ログアウト</button>
             </div>
           </th>
           <th v-else key="logout" colspan="2">
             <div>
-              <button type="button" @click="doLogin">ログイン</button>
+              <button type="button" @click="$emit('login')" class="login button">ログイン</button>
             </div>
           </th>
         </tr>
@@ -34,16 +42,16 @@
             v-for="day in week"
             :key="day.fullDate"
             :class="{disabled: day.isDisabled, today: day.isToday}"
-            @click="openModal(day.fullDate)"
+            @click="$emit('open', day.fullDate)"
           >
             {{day.date}}
             <br />
             <div class="taskList">
               <template v-for="task in taskList">
                 <span
-                  v-if="task.date === day.fullDate && task.uid === user.uid"
+                  v-if="task.date === day.fullDate && task.uid === getUser.uid"
                   :key="task.id"
-                  @click.stop="openEditModal(task.id)"
+                  @click.stop="$emit('edit', task.id)"
                 >{{task.name}}</span>
               </template>
             </div>
@@ -51,84 +59,24 @@
         </tr>
       </tbody>
     </table>
-    <!-- 新規追加用モーダル -->
-    <my-modal @close="closeModal" v-if="modal">
-      <p>タスクを入力してください</p>
-      <div>
-        <input type="text" v-model="message" />
-      </div>
-      <template slot="footer">
-        <button @click="doSend">送信</button>
-      </template>
-    </my-modal>
-    <!-- 編集用モーダル -->
-    <my-modal @close="closeModal" v-if="editModal">
-      <button @click="deleteTask()">削除</button>
-      <p>タスクを入力してください</p>
-      <div>
-        <input type="text" v-model="editMessage" />
-      </div>
-      <template slot="footer">
-        <button @click="doEdit()">送信</button>
-      </template>
-    </my-modal>
   </div>
 </template>
 
 <script>
-import firebase from "firebase";
-import "firebase/firestore";
-import MyModal from "./MyModal.vue";
-
 export default {
-  components: {
-    MyModal,
-  },
   data() {
     return {
       month: "", // new Dateから作成した現在の月
       year: "", // new Dateから作成した現在の年
       today: "", // new Date用
-      modal: false, // 新規追加用モーダル表示
-      editModal: false, // 更新用モーダル表示
-      message: "", // タスク内容をv-modelで一時的に保存
-      editMessage: "", // 編集するタスク内容をv-modelで一時的に保存
-      fullDate: "", // 年月日
-      taskId: null, // タスクを特定するid
-      db: null,
-      user: {},
     };
   },
   created() {
     this.today = new Date();
 
     this.year = this.today.getFullYear();
-    // 0 ~ 11
+
     this.month = this.today.getMonth();
-
-    this.db = firebase.firestore();
-
-    var that = this;
-    this.db
-      .collection("tasks")
-      .get()
-      .then((snapshot) => {
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          that.$store.commit("addTask", {
-            message: data.message,
-            date: data.date,
-            id: data.id,
-            uid: data.uid,
-          });
-        });
-        console.log(this.$store.state.tasks);
-      });
-
-    // ログイン、ログアウト時にも実行している
-    firebase.auth().onAuthStateChanged((user) => {
-      this.user = user ? user : {};
-    });
   },
   computed: {
     createCalendar() {
@@ -222,11 +170,8 @@ export default {
       return this.$store.getters.taskList;
     },
 
-    getTaskMessage() {
-      const editTask = this.taskList.filter(
-        (task) => task.id === this.taskId
-      )[0];
-      return editTask;
+    getUser() {
+      return this.$store.getters.getUser;
     },
   },
   methods: {
@@ -243,91 +188,6 @@ export default {
         this.year++;
         this.month = 0;
       }
-    },
-    openModal(value) {
-      if (this.user.uid) {
-        this.message = "";
-        this.modal = true;
-        // doSendでmutationに渡すのに使う
-        this.fullDate = value;
-      }
-    },
-    openEditModal(taskId) {
-      this.editModal = true;
-      this.taskId = taskId;
-      this.editMessage = this.getTaskMessage.name;
-    },
-    closeModal() {
-      this.modal = false;
-      this.editModal = false;
-      this.message = "";
-    },
-    doSend() {
-      if (this.user.uid && this.message.length > 0) {
-        const that = this;
-        const doc = this.db.collection("tasks").doc();
-        doc
-          .set({
-            message: that.message,
-            date: that.fullDate,
-            id: doc.id,
-            uid: that.user.uid,
-          })
-          .then(function () {
-            console.log("Done!");
-          })
-          .catch(function () {
-            console.log("Error!");
-          });
-
-        this.$store.commit("addTask", {
-          message: this.message,
-          date: this.fullDate,
-          id: doc.id,
-          uid: this.user.uid,
-        });
-        this.message = "";
-        this.closeModal();
-      } else {
-        alert("タスクを入力してください");
-      }
-    },
-    doEdit() {
-      if (this.user.uid && this.message.length > 0) {
-        const that = this;
-        this.db.collection("tasks").doc(this.taskId).update({
-          message: that.editMessage,
-        });
-        this.$store.commit("editTask", {
-          editMessage: this.editMessage,
-          taskId: this.taskId,
-        });
-        this.editMessage = "";
-        this.closeModal();
-      } else {
-        alert("タスクを入力してください");
-      }
-    },
-    deleteTask() {
-      if (!confirm("このタスクを削除しますか？")) {
-        return;
-      }
-      this.db
-        .collection("tasks")
-        .doc(this.taskId)
-        .delete()
-        .then(() => {
-          console.log("delete!");
-        });
-      this.$store.commit("deleteTask", { id: this.taskId });
-      this.editModal = false;
-    },
-    doLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithPopup(provider);
-    },
-    doLogout() {
-      firebase.auth().signOut();
     },
   },
 };
@@ -346,15 +206,34 @@ table {
   table-layout: fixed;
 }
 
+.icon {
+  font-size: 28px;
+  transition: 0.3s;
+}
+.icon:hover {
+  opacity: 0.6;
+}
+
 thead {
   background: #eeeeee;
 }
 
+.button {
+  background-color: white;
+  border: 1px solid #333333;
+  border-radius: 5px;
+  padding: 2.5px 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.button:hover {
+  opacity: 0.6;
+}
+
 th,
 td {
-  padding: 8px;
+  padding: 8px 0;
   text-align: center;
-  // height: 50px;
   border: 1px solid #eeeeee;
   user-select: none;
   -moz-user-select: none;
@@ -362,18 +241,23 @@ td {
 
 td {
   vertical-align: top;
-  overflow-y: scroll;
+  overflow-y: hidden;
   cursor: pointer;
 }
 
 .taskList {
   display: flex;
   flex-direction: column;
+  height: 90%;
+  overflow-y: scroll;
+  padding-bottom: 20px;
   span {
+    font-size: 12.5px;
     background-color: rgb(199, 36, 58);
     color: white;
-    padding: 5px;
-    margin-bottom: 10px;
+    padding: 2.5px;
+    margin-bottom: 3px;
+    border-radius: 5px;
   }
   span.visible {
     display: none;
