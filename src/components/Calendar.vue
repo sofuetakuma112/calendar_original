@@ -245,10 +245,12 @@ export default {
       }
     },
     openModal(value) {
-      this.message = "";
-      this.modal = true;
-      // doSendでmutationに渡すのに使う
-      this.fullDate = value;
+      if (this.user.uid) {
+        this.message = "";
+        this.modal = true;
+        // doSendでmutationに渡すのに使う
+        this.fullDate = value;
+      }
     },
     openEditModal(taskId) {
       this.editModal = true;
