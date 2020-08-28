@@ -19,7 +19,8 @@ const store = new Vuex.Store({
       state.tasks.push({
         id: payload.id,
         name: payload.message,
-        date: payload.date
+        date: payload.date,
+        uid: payload.uid
       })
     },
     // taskIdで検索してヒットしたタスクの内容を上書きする

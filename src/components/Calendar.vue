@@ -1,5 +1,16 @@
 <template>
   <div class="calendar-wrapper example-modal-window">
+    <header class="header">
+      <h1>カレンダー</h1>
+      <div v-if="user.uid" key="login">
+        ようこそ{{user.displayName}}様
+        <button type="button" @click="doLogout">ログアウト</button>
+      </div>
+      <div v-else key="logout">
+        <button type="button" @click="doLogin">ログイン</button>
+      </div>
+    </header><br>
+
     <table>
       <thead>
         <tr>
@@ -30,7 +41,7 @@
             <div class="taskList">
               <template v-for="task in taskList">
                 <span
-                  v-if="task.date === day.fullDate"
+                  v-if="task.date === day.fullDate && task.uid === user.uid"
                   :key="task.id"
                   @click.stop="openEditModal(task.id)"
                 >{{task.name}}</span>
@@ -84,7 +95,8 @@ export default {
       editMessage: "", // 編集するタスク内容をv-modelで一時的に保存
       fullDate: "", // 年月日
       taskId: null, // タスクを特定するid
-      db: null
+      db: null,
+      user: {},
     };
   },
   created() {
@@ -103,17 +115,20 @@ export default {
       .then((snapshot) => {
         snapshot.forEach((doc) => {
           const data = doc.data();
-          that.message = data.message;
-          that.fullDate = data.date;
-          that.taskId = data.id;
           that.$store.commit("addTask", {
-            message: that.message,
-            date: that.fullDate,
-            id: that.taskId,
+            message: data.message,
+            date: data.date,
+            id: data.id,
+            uid: data.uid,
           });
-          console.log();
         });
+        console.log(this.$store.state.tasks);
       });
+
+    // ログイン、ログアウト時にも実行している
+    firebase.auth().onAuthStateChanged((user) => {
+      this.user = user ? user : {};
+    });
   },
   computed: {
     createCalendar() {
@@ -246,7 +261,7 @@ export default {
       this.message = "";
     },
     doSend() {
-      if (this.message.length > 0) {
+      if (this.user.uid && this.message.length > 0) {
         const that = this;
         const doc = this.db.collection("tasks").doc();
         doc
@@ -254,6 +269,7 @@ export default {
             message: that.message,
             date: that.fullDate,
             id: doc.id,
+            uid: that.user.uid,
           })
           .then(function () {
             console.log("Done!");
@@ -266,6 +282,7 @@ export default {
           message: this.message,
           date: this.fullDate,
           id: doc.id,
+          uid: this.user.uid,
         });
         this.message = "";
         this.closeModal();
@@ -274,7 +291,7 @@ export default {
       }
     },
     doEdit() {
-      if (this.editMessage.length > 0) {
+      if (this.user.uid && this.message.length > 0) {
         const that = this;
         this.db.collection("tasks").doc(this.taskId).update({
           message: that.editMessage,
@@ -294,7 +311,7 @@ export default {
         return;
       }
       this.db
-        .collection('tasks')
+        .collection("tasks")
         .doc(this.taskId)
         .delete()
         .then(() => {
@@ -302,6 +319,13 @@ export default {
         });
       this.$store.commit("deleteTask", { id: this.taskId });
       this.editModal = false;
+    },
+    doLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider);
+    },
+    doLogout() {
+      firebase.auth().signOut();
     },
   },
 };

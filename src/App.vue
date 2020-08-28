@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <!-- <header-list></header-list> -->
     <calendar></calendar>
   </div>
 </template>
