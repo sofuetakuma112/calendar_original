@@ -1,24 +1,11 @@
-# todoapp
+カレンダーアプリ
 
-## Project setup
-```
-npm install
-```
+概要
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+Googleカレンダーのようなアプリです。
 
-### Compiles and minifies for production
-```
-npm run build
-```
+タスクを登録、編集、削除が出来ます。
 
-### Lints and fixes files
-```
-npm run lint
-```
+firebaseを使った認証機能により自分の登録したタスクは他人に見えません。
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+更に、firestoreによりデータを永続化させています。
