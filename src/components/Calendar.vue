@@ -44,7 +44,7 @@
             :class="{disabled: day.isDisabled, today: day.isToday}"
             @click="$emit('open', day.fullDate)"
           >
-            {{day.date}}
+            <span :class="{holiday: checkHoliday(day.fullDate)}">{{day.date}}</span>
             <br />
             <div class="taskList">
               <template v-for="task in taskList">
@@ -63,7 +63,8 @@
 </template>
 
 <script>
-import getMixin from '../mixins/get.js'
+import getMixin from "../mixins/get.js";
+import axios from "axios";
 export default {
   mixins: [getMixin],
   data() {
@@ -71,6 +72,7 @@ export default {
       month: "", // new Dateから作成した現在の月
       year: "", // new Dateから作成した現在の年
       today: "", // new Date用
+      holidays: [],
     };
   },
   created() {
@@ -79,6 +81,17 @@ export default {
     this.year = this.today.getFullYear();
 
     this.month = this.today.getMonth();
+
+    axios
+      .get("https://holidays-jp.github.io/api/v1/date.json")
+      .then((response) => {
+        const keys = Object.keys(response.data);
+        const replacedKeys = [];
+        for (let i = 0; i < keys.length; i++) {
+          replacedKeys.push(keys[i].replace(/-/g, "_"));
+        }
+        this.holidays = replacedKeys;
+      });
   },
   computed: {
     createCalendar() {
@@ -166,7 +179,7 @@ export default {
       }
 
       return dates;
-    }
+    },
   },
   methods: {
     prevPage() {
@@ -182,6 +195,9 @@ export default {
         this.year++;
         this.month = 0;
       }
+    },
+    checkHoliday(day) {
+      return this.holidays.some((holiday) => holiday === day);
     },
   },
 };
@@ -237,6 +253,9 @@ td {
   vertical-align: top;
   overflow-y: hidden;
   cursor: pointer;
+  .holiday {
+    color: red;
+  }
 }
 
 .taskList {
