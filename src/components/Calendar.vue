@@ -63,7 +63,9 @@
 </template>
 
 <script>
+import getMixin from '../mixins/get.js'
 export default {
+  mixins: [getMixin],
   data() {
     return {
       month: "", // new Dateから作成した現在の月
@@ -164,15 +166,7 @@ export default {
       }
 
       return dates;
-    },
-
-    taskList() {
-      return this.$store.getters.taskList;
-    },
-
-    getUser() {
-      return this.$store.getters.getUser;
-    },
+    }
   },
   methods: {
     prevPage() {

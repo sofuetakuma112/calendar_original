@@ -30,6 +30,7 @@ import calendar from "./components/Calendar.vue";
 import MyModal from "./components/MyModal.vue";
 import firebase from "firebase";
 import "firebase/firestore";
+import getMixin from './mixins/get.js'
 
 export default {
   name: "App",
@@ -37,6 +38,7 @@ export default {
     calendar,
     MyModal,
   },
+  mixins: [getMixin],
   data() {
     return {
       modal: false, // 新規追加用モーダル表示
@@ -52,12 +54,6 @@ export default {
     getTaskMessage() {
       const editTask = this.taskList.find((task) => task.id === this.taskId);
       return editTask;
-    },
-    taskList() {
-      return this.$store.getters.taskList;
-    },
-    getUser() {
-      return this.$store.getters.getUser
     }
   },
   created() {
