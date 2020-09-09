@@ -2,6 +2,10 @@
 
 カレンダーアプリ
 
+[デプロイ先のURL]
+
+https://sad-wilson-907d21.netlify.app/
+
 [概要]
 
 Googleカレンダーのようなアプリです。
@@ -18,6 +22,3 @@ firebaseを使った認証機能により自分の登録したタスクは他人
 
 外部APIを利用して祝日が赤色になるようにしました
 
-[デプロイ先のURL]
-
-https://sad-wilson-907d21.netlify.app/
